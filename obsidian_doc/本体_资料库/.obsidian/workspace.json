@@ -1,0 +1,224 @@
+{
+  "main": {
+    "id": "77ce8b37c154d970",
+    "type": "split",
+    "children": [
+      {
+        "id": "f8ca77a25a111adc",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "845e119937c44dd3",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "网销渠道投保操作手册.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "网销渠道投保操作手册"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "8e9b334bdfd922a3",
+    "type": "split",
+    "children": [
+      {
+        "id": "922a1238d343b8d0",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "c858c5c3d3a92339",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "文件列表"
+            }
+          },
+          {
+            "id": "2d9dbf22796a7915",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "搜索"
+            }
+          },
+          {
+            "id": "ff16578cbd27e974",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "书签"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "7ce401e7de3e05d1",
+    "type": "split",
+    "children": [
+      {
+        "id": "a7e7a30afa75cae3",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "38b3ac6e478e8f26",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "保险法.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "保险法 的反向链接列表"
+            }
+          },
+          {
+            "id": "ba9fe8b3c5a611e9",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "保险法.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "保险法 的出链列表"
+            }
+          },
+          {
+            "id": "5ab8013053f4bbd3",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "标签"
+            }
+          },
+          {
+            "id": "88fc079c84adfb7d",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "添加笔记属性"
+            }
+          },
+          {
+            "id": "f8fbee000d011ba1",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "保险法.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "保险法 的大纲"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:打开快速切换": false,
+      "graph:查看关系图谱": false,
+      "canvas:新建白板": false,
+      "daily-notes:打开/创建今天的日记": false,
+      "templates:插入模板": false,
+      "command-palette:打开命令面板": false,
+      "bases:新建数据库": false
+    }
+  },
+  "active": "845e119937c44dd3",
+  "lastOpenFiles": [
+    "少儿重大疾病保险（2026版）产品条款.md",
+    "退保与退费处理办法.md",
+    "网销渠道投保操作手册.md",
+    "未命名.base",
+    "2026版少儿重疾险产品说明书.md",
+    "保全业务管理办法.md",
+    "保全业务管理办法.md.tmp.20168.1779376246915",
+    "续期保费催缴与宽限期处理办法.md",
+    "理赔报案与调查手册.md",
+    "理赔报案与调查手册.md.tmp.20168.1779376246857",
+    "退保与退费处理办法.md.tmp.20168.1779376225042",
+    "网销渠道投保操作手册.md.tmp.20168.1779376225016",
+    "产品条款.md.tmp.20168.1779376224997",
+    "保全业务管理办法.md.tmp.20168.1779375873331",
+    "2026版少儿重疾险产品说明书.md.tmp.20168.1779375873270",
+    "理赔报案与调查手册.md.tmp.20168.1779375844638",
+    "退保与退费处理办法.md.tmp.20168.1779375844603",
+    "保单生命周期管理.md",
+    "监管合规要求.md",
+    "重疾险产品条款.md",
+    "犹豫期与宽限期管理.md",
+    "理赔操作规范.md",
+    "退保操作规范.md",
+    "操作手册/核保操作手册_人工核保分册.md",
+    "产品费率/2026版少儿重疾险费率表.md",
+    "接口文档/核心系统数据库表结构字典_保全相关.md",
+    "合规要求/反洗钱内控制度_保险业适用.md",
+    "接口文档/收付微服务接口规范_v1.2.md",
+    "接口文档/保全微服务接口规范_v1.5.md",
+    "业务规范/网销渠道投保操作规范_v2.3.md",
+    "操作手册/保全批处理作业操作手册.md",
+    "业务规范/保全操作手册_退保分册.md",
+    "操作手册/理赔报案与立案操作手册.md",
+    "产品费率/百万医疗险产品条款摘要.md",
+    "合规要求/金管局互联网保险业务监管办法要点.md"
+  ]
+}
