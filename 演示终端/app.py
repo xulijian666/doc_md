@@ -5,6 +5,8 @@
 import os
 import sys
 import shutil
+import time
+import threading
 import uuid
 import zipfile
 import io
@@ -27,6 +29,30 @@ app.config['MAX_CONTENT_LENGTH'] = 200 * 1024 * 1024
 SUPPORTED_EXTS = {'.docx', '.doc', '.xlsx', '.xls', '.pdf'}
 TEMP_DIR = Path(__file__).parent / "_temp"
 TEMP_DIR.mkdir(exist_ok=True)
+
+# 临时文件过期清理：1 小时
+TEMP_EXPIRE_SECS = 1800
+
+
+def _cleanup_expired():
+    """删除 _temp 中超过 1 小时未修改的会话目录"""
+    while True:
+        try:
+            now = time.time()
+            for d in TEMP_DIR.iterdir():
+                if d.is_dir():
+                    mtime = d.stat().st_mtime
+                    if now - mtime > TEMP_EXPIRE_SECS:
+                        shutil.rmtree(d, ignore_errors=True)
+                        print(f"[cleanup] 已清理过期会话: {d.name}")
+        except Exception:
+            pass
+        time.sleep(600)  # 每 10 分钟检查一次
+
+
+# 启动后台清理线程（daemon，随主进程退出）
+_thread = threading.Thread(target=_cleanup_expired, daemon=True)
+_thread.start()
 
 
 @app.errorhandler(Exception)
@@ -110,6 +136,7 @@ def upload_files():
     session_dir = TEMP_DIR / session_id
     session_dir.mkdir(exist_ok=True)
 
+    errors = []
     file_list = []
     for f in files:
         if not f.filename:
@@ -117,36 +144,29 @@ def upload_files():
         filename = f.filename.replace('\\', '/')
         suffix = Path(filename).suffix.lower()
         if suffix not in SUPPORTED_EXTS:
+            errors.append(f"{Path(filename).name} (不支持格式: {suffix})")
             continue
 
-        # 保留相对路径结构（文件夹上传时）
-        parts = filename.split('/')
-        if len(parts) > 1:
-            # 有子目录结构，保留
-            sub_path = Path(*parts)
-            save_path = session_dir / sub_path
-            save_path.parent.mkdir(parents=True, exist_ok=True)
-            display_name = filename  # 相对路径
-        else:
-            save_path = session_dir / parts[0]
-            display_name = parts[0]
-
+        save_path = session_dir / Path(filename).name
         f.save(str(save_path))
 
         file_list.append({
             'name': Path(filename).name,
-            'relative_path': display_name,
+            'relative_path': Path(filename).name,
             'temp_path': str(save_path),
             'size': save_path.stat().st_size,
             'type': get_file_type(suffix),
             'suffix': suffix
         })
 
-    if not file_list:
+    if not file_list and errors:
         shutil.rmtree(session_dir, ignore_errors=True)
-        return jsonify({'error': '没有可转换的文件，支持格式: docx, doc, xlsx, xls, pdf'}), 400
+        return jsonify({'error': '所有文件均不支持。\n' + '\n'.join(errors)}), 400
 
-    return jsonify({'session_id': session_id, 'files': file_list, 'count': len(file_list)})
+    result = {'session_id': session_id, 'files': file_list, 'count': len(file_list)}
+    if errors:
+        result['warnings'] = errors
+    return jsonify(result)
 
 
 @app.route('/api/convert', methods=['POST'])
