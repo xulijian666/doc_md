@@ -1,0 +1,9 @@
+flask>=3.0.0
+openpyxl>=3.0.0
+pandas>=1.3.0
+xlsxwriter>=3.0.0
+Pillow>=8.0.0
+pywin32>=306
+markitdown[pdf]>=0.1.0
+# 注意：pandoc 需要单独安装系统级二进制文件
+# 下载地址：https://pandoc.org/installing.html
