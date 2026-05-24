@@ -1,0 +1,222 @@
+{
+  "main": {
+    "id": "0ead5fd8a7652f67",
+    "type": "split",
+    "children": [
+      {
+        "id": "808cbef9f947593d",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "f4b7565b44450f5d",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "99_看板/术语表.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "术语表"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "20f3fc8fc8b3dcba",
+    "type": "split",
+    "children": [
+      {
+        "id": "2e9f60f00d562582",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "dca33476e8cbfabe",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "文件列表"
+            }
+          },
+          {
+            "id": "bbcba0a4c502ab50",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "搜索"
+            }
+          },
+          {
+            "id": "014b11c6218e28ec",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "书签"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "4edabbe856c31219",
+    "type": "split",
+    "children": [
+      {
+        "id": "c1581defa568f5f1",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "6058fc35609675e3",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "01_需求文档/寿险保全业务需求规格说明书_BRD.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "寿险保全业务需求规格说明书_BRD 的反向链接列表"
+            }
+          },
+          {
+            "id": "30170950eb57226a",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "01_需求文档/寿险保全业务需求规格说明书_BRD.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "寿险保全业务需求规格说明书_BRD 的出链列表"
+            }
+          },
+          {
+            "id": "b846e52fc1024f50",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "标签"
+            }
+          },
+          {
+            "id": "8d34670adf8fb71b",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "添加笔记属性"
+            }
+          },
+          {
+            "id": "006047dab98f35f5",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "01_需求文档/寿险保全业务需求规格说明书_BRD.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "寿险保全业务需求规格说明书_BRD 的大纲"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:打开快速切换": false,
+      "graph:查看关系图谱": false,
+      "canvas:新建白板": false,
+      "daily-notes:打开/创建今天的日记": false,
+      "templates:插入模板": false,
+      "command-palette:打开命令面板": false,
+      "bases:新建数据库": false,
+      "omnisearch:Omnisearch": false,
+      "templater-obsidian:Templater": false,
+      "obsidian-kanban:创建新看板": false,
+      "obsidian-excalidraw-plugin:新建绘图文件": false
+    }
+  },
+  "active": "f4b7565b44450f5d",
+  "lastOpenFiles": [
+    "02_设计文档/投保核心系统API接口文档.md",
+    "02_设计文档/核心数据模型设计_ERD.md",
+    "02_设计文档/核心承保系统API接口文档.md",
+    "02_设计文档/保险核心系统技术架构设计.md",
+    "未命名.base",
+    "🏠 资料库主页.md",
+    "99_模板/需求文档模板.md",
+    "99_模板/接口文档模板.md",
+    "99_模板/会议纪要模板.md",
+    "99_看板/知识图谱索引.md",
+    "99_看板/项目进度看板.md",
+    "99_看板/术语表.md",
+    "01_需求文档.md",
+    "04_合规文档/反洗钱AML规则与流程.md",
+    "📊 资料库看板.md",
+    "04_合规文档/个人信息保护实施规范.md",
+    "03_数据资料/报表定义规范_月度保费统计.md",
+    "01_需求文档/寿险保全业务需求规格说明书_BRD.md",
+    "01_需求文档/车险投保业务需求规格说明书_BRD.md",
+    "02_设计文档/理赔系统API接口文档.md",
+    "05_测试与上线/生产环境发布手册.md",
+    "未命名.md",
+    "未命名看板.md",
+    "Excalidraw/Drawing 2026-05-23 00.32.47.excalidraw.md",
+    "Excalidraw",
+    "99_看板",
+    "99_模板",
+    "01_需求文档/团险投保与理赔需求规格说明书_BRD.md",
+    "01_需求文档/再保险分出业务需求规格说明书_SRS.md"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "obsidian": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "obsidian-mcp",
+        "D:\\CODE\\doc_md\\demo\\演示资料"
+      ]
+    }
+  }
+}
