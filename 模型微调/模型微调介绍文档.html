@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>模型微调：训练保险领域的需求分析模型</title>
+<style>
+  :root {
+    --ink: #111111;
+    --ink-light: #222222;
+    --text: #1a1a1a;
+    --text-secondary: #444444;
+    --text-muted: #888888;
+    --bg: #f7f7f7;
+    --bg-card: #ffffff;
+    --border: #d0d0d0;
+    --border-light: #e5e5e5;
+    --line: #c0c0c0;
+    --accent: #222222;
+    --accent-bg: #f0f0f0;
+    --accent-border: #999999;
+    --code-bg: #1a1a1a;
+    --code-text: #e0e0e0;
+    --table-head: #111111;
+    --callout-border: #333333;
+    --callout-bg: #f5f5f5;
+    --callout-green-border: #4a6741;
+    --callout-green-bg: #f4f6f3;
+    --callout-amber-border: #8a7030;
+    --callout-amber-bg: #f8f6f0;
+    --callout-red-border: #8a3030;
+    --callout-red-bg: #f8f3f3;
+    --accent-blue: #2a5a8a;
+    --accent-blue-light: #eef3f8;
+    --radius: 4px;
+    --shadow: 0 1px 3px rgba(0,0,0,.04);
+    --sidebar-w: 270px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: "Microsoft YaHei", "微软雅黑", "PingFang SC", "Hiragino Sans GB", sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    line-height: 2;
+    font-size: 17px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== Mobile Menu Button ===== */
+  .menu-btn {
+    display: none;
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 200;
+    width: 42px;
+    height: 42px;
+    border-radius: 6px;
+    background: var(--ink);
+    border: none;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,.12);
+    transition: transform .2s;
+  }
+  .menu-btn:active { transform: scale(.92); }
+  .menu-btn span {
+    display: block;
+    width: 18px;
+    height: 2px;
+    background: #fff;
+    border-radius: 1px;
+    position: relative;
+    transition: all .25s;
+  }
+  .menu-btn span::before,
+  .menu-btn span::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 2px;
+    background: #fff;
+    border-radius: 1px;
+    transition: all .25s;
+  }
+  .menu-btn span::before { top: -6px; }
+  .menu-btn span::after { top: 6px; }
+  .menu-btn.open span { background: transparent; }
+  .menu-btn.open span::before { top: 0; transform: rotate(45deg); }
+  .menu-btn.open span::after { top: 0; transform: rotate(-45deg); }
+
+  /* ===== Backdrop ===== */
+  .backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.3);
+    z-index: 90;
+    opacity: 0;
+    transition: opacity .25s;
+  }
+  .backdrop.show { opacity: 1; }
+
+  /* ===== Sidebar ===== */
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: var(--sidebar-w);
+    height: 100vh;
+    height: 100dvh;
+    background: var(--bg-card);
+    border-right: 1px solid var(--border-light);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: transform .28s cubic-bezier(.4,0,.2,1);
+  }
+  .sidebar-header {
+    padding: 28px 22px 18px;
+    border-bottom: 1px solid var(--border-light);
+    flex-shrink: 0;
+  }
+  .sidebar-header h3 {
+    font-size: .9rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 4px;
+    letter-spacing: 2px;
+  }
+  .sidebar-header p {
+    font-size: .72rem;
+    color: var(--text-muted);
+    margin: 0;
+  }
+  .sidebar-nav {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 0;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+  .sidebar-nav::-webkit-scrollbar { width: 3px; }
+  .sidebar-nav::-webkit-scrollbar-thumb { background: var(--line); border-radius: 2px; }
+
+  .nav-section { padding: 0 10px; margin-bottom: 2px; }
+  .nav-section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    border-radius: 4px;
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-size: .82rem;
+    font-weight: 500;
+    transition: all .15s;
+    cursor: pointer;
+  }
+  .nav-section-title:hover { background: var(--accent-bg); color: var(--ink); }
+  .nav-section-title.active { background: var(--accent); color: #fff; }
+  .nav-section-title .nav-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--line);
+  }
+  .nav-section-title.active .nav-dot { background: rgba(255,255,255,.5); }
+  .nav-section-title .nav-num {
+    font-size: .68rem;
+    font-weight: 700;
+    opacity: .4;
+    min-width: 14px;
+  }
+
+  .nav-sub {
+    padding: 0 0 0 30px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height .3s ease;
+  }
+  .nav-section.open .nav-sub { max-height: 400px; }
+  .nav-sub a {
+    display: block;
+    padding: 4px 10px;
+    border-radius: 3px;
+    text-decoration: none;
+    color: var(--text-muted);
+    font-size: .76rem;
+    transition: all .15s;
+    border-left: 2px solid transparent;
+  }
+  .nav-sub a:hover { color: var(--ink); background: var(--accent-bg); border-left-color: var(--accent-border); }
+  .nav-sub a.active { color: var(--ink); font-weight: 600; border-left-color: var(--accent-blue); background: var(--accent-blue-light); }
+
+  /* ===== Progress indicator on sidebar ===== */
+  .sidebar-progress {
+    flex-shrink: 0;
+    padding: 12px 22px;
+    border-top: 1px solid var(--border-light);
+    font-size: .7rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sidebar-progress .bar {
+    flex: 1;
+    height: 3px;
+    background: var(--border-light);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .sidebar-progress .bar-fill {
+    height: 100%;
+    background: var(--ink);
+    border-radius: 2px;
+    transition: width .3s;
+    width: 0%;
+  }
+
+  /* ===== Main ===== */
+  .main { margin-left: var(--sidebar-w); min-height: 100vh; }
+
+  /* ===== Hero ===== */
+  .hero {
+    background: var(--ink);
+    color: #cccccc;
+    padding: 72px 24px 56px;
+    text-align: center;
+  }
+  .hero h1 {
+    font-size: 2.4rem;
+    font-weight: 700;
+    margin-bottom: 14px;
+    letter-spacing: 2px;
+    color: #ffffff;
+  }
+  .hero p { font-size: 1.1rem; opacity: .55; max-width: 620px; margin: 0 auto; line-height: 1.8; }
+  .hero .badge {
+    display: inline-block;
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 3px;
+    padding: 4px 14px;
+    font-size: .78rem;
+    margin-bottom: 18px;
+    letter-spacing: 3px;
+    color: rgba(255,255,255,.4);
+  }
+
+  /* ===== Layout ===== */
+  .container { max-width: 920px; margin: 0 auto; padding: 0 28px; }
+
+  /* ===== Section ===== */
+  .section {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin: 28px 0;
+    padding: 36px 42px;
+    border: 1px solid var(--border-light);
+  }
+  .section-num {
+    display: inline-block;
+    background: var(--ink);
+    color: #fff;
+    font-size: .7rem;
+    font-weight: 600;
+    padding: 3px 12px;
+    border-radius: 2px;
+    margin-bottom: 12px;
+    letter-spacing: 1px;
+  }
+
+  h2 {
+    font-size: 1.55rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 22px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--ink);
+  }
+  h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 28px 0 12px;
+  }
+  h4 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--ink-light);
+    margin: 22px 0 10px;
+    padding-left: 14px;
+    border-left: 3px solid var(--ink);
+  }
+
+  p { margin-bottom: 14px; }
+  strong { color: var(--ink); font-weight: 700; }
+
+  /* ===== Table ===== */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0 18px;
+    font-size: .92rem;
+  }
+  thead th {
+    background: var(--table-head);
+    color: #fff;
+    font-weight: 600;
+    text-align: left;
+    padding: 11px 14px;
+    font-size: .82rem;
+    letter-spacing: .5px;
+  }
+  tbody td {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border-light);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:nth-child(even) { background: #fafafa; }
+  tbody tr:hover { background: #f0f0f0; }
+
+  /* ===== Callout ===== */
+  .callout {
+    border-radius: 3px;
+    padding: 16px 20px;
+    margin: 16px 0;
+    font-size: .95rem;
+    line-height: 1.8;
+    border-left: 3px solid;
+  }
+  .callout.blue { background: var(--callout-bg); border-color: var(--callout-border); }
+  .callout.green { background: var(--callout-green-bg); border-color: var(--callout-green-border); }
+  .callout.amber { background: var(--callout-amber-bg); border-color: var(--callout-amber-border); }
+  .callout.red { background: var(--callout-red-bg); border-color: var(--callout-red-border); }
+  .callout strong { display: block; margin-bottom: 3px; }
+
+  /* ===== Code block ===== */
+  pre {
+    background: var(--code-bg);
+    color: var(--code-text);
+    border-radius: 4px;
+    padding: 18px 22px;
+    margin: 14px 0 18px;
+    overflow-x: auto;
+    font-size: .86rem;
+    line-height: 1.8;
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid #333;
+  }
+  code {
+    font-family: "JetBrains Mono", "Fira Code", "Consolas", monospace;
+    font-size: .86em;
+  }
+  p code, td code {
+    background: #f0f0f0;
+    color: var(--ink-light);
+    padding: 1px 6px;
+    border-radius: 2px;
+    border: 1px solid var(--border);
+  }
+
+  /* ===== Flow chart ===== */
+  .flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+  .flow-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px 22px;
+    text-align: center;
+    min-width: 160px;
+    font-size: .9rem;
+  }
+  .flow-box.highlight {
+    background: var(--ink);
+    color: #fff;
+    border-color: var(--ink);
+    font-weight: 600;
+  }
+  .flow-arrow {
+    font-size: 1.2rem;
+    color: var(--line);
+    padding: 0 6px;
+    flex-shrink: 0;
+  }
+
+  /* ===== Step cards ===== */
+  .step-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px;
+    margin: 16px 0;
+  }
+  .step-card {
+    background: #fafafa;
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    padding: 18px;
+    text-align: center;
+  }
+  .step-card .step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: #fff;
+    font-weight: 700;
+    font-size: .82rem;
+    margin-bottom: 8px;
+  }
+  .step-card .step-title { font-weight: 700; margin-bottom: 4px; color: var(--ink); font-size: .92rem; }
+  .step-card .step-desc { font-size: .82rem; color: var(--text-muted); }
+
+  /* ===== Summary cards ===== */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+    margin: 16px 0;
+  }
+  .summary-card {
+    border-radius: 4px;
+    padding: 20px 22px;
+    border: 1px solid var(--border);
+    background: #fafafa;
+  }
+  .summary-card h5 {
+    font-size: .98rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--ink);
+  }
+  .summary-card p {
+    font-size: .88rem;
+    margin-bottom: 0;
+    color: var(--text-secondary);
+  }
+
+  /* ===== UL / OL ===== */
+  ul, ol { margin: 8px 0 14px 22px; }
+  li { margin-bottom: 6px; }
+
+  /* ===== HR ===== */
+  .divider { border: none; border-top: 1px solid var(--border-light); margin: 30px 0; }
+  .divider-dash { border: none; border-top: 1px dashed var(--border); margin: 30px 0; }
+
+  /* ===== Back to top ===== */
+  .back-top {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,.12);
+    z-index: 50;
+    transition: transform .15s, opacity .2s;
+  }
+  .back-top.show { display: flex; }
+  .back-top:active { transform: scale(.9); }
+
+  /* ===== Footer ===== */
+  .footer {
+    text-align: center;
+    padding: 36px 24px;
+    color: var(--text-muted);
+    font-size: .82rem;
+  }
+
+  /* ===== Responsive: Tablet ===== */
+  @media (max-width: 900px) {
+    .menu-btn { display: flex; }
+    .sidebar {
+      transform: translateX(-100%);
+      box-shadow: 4px 0 20px rgba(0,0,0,.1);
+    }
+    .sidebar.open { transform: translateX(0); }
+    .backdrop { display: block; pointer-events: none; }
+    .backdrop.show { pointer-events: auto; }
+    .main { margin-left: 0; }
+    .hero { padding-top: 72px; }
+  }
+
+  /* ===== Responsive: Phone ===== */
+  @media (max-width: 600px) {
+    body { font-size: 16px; }
+    .hero { padding: 64px 16px 40px; }
+    .hero h1 { font-size: 1.6rem; letter-spacing: 0; }
+    .hero p { font-size: .92rem; }
+    .container { padding: 0 14px; }
+    .section { padding: 20px 16px; margin: 12px 0; }
+    h2 { font-size: 1.25rem; margin-bottom: 16px; }
+    h3 { font-size: 1.05rem; margin: 20px 0 10px; }
+    h4 { font-size: .95rem; margin: 18px 0 8px; }
+    table { font-size: .84rem; display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    thead th, tbody td { padding: 8px 10px; white-space: nowrap; }
+    pre { padding: 12px 14px; font-size: .78rem; border-radius: 3px; }
+    .flow { flex-direction: column; gap: 4px; }
+    .flow-arrow { transform: rotate(90deg); padding: 4px 0; }
+    .flow-box { min-width: auto; width: 100%; padding: 12px 16px; }
+    .step-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .step-card { padding: 14px; }
+    .summary-grid { grid-template-columns: 1fr; }
+    .callout { padding: 12px 14px; font-size: .9rem; }
+    ul, ol { margin-left: 18px; }
+    .sidebar { width: 85vw; max-width: 320px; }
+  }
+
+  /* ===== Print ===== */
+  @media print {
+    .sidebar, .menu-btn, .back-top, .backdrop { display: none !important; }
+    .main { margin-left: 0; }
+    .section { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; }
+    .hero { background: #111 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Mobile menu button -->
+<button class="menu-btn" id="menuBtn" onclick="toggleSidebar()" aria-label="打开目录">
+  <span></span>
+</button>
+
+<!-- Backdrop -->
+<div class="backdrop" id="backdrop" onclick="closeSidebar()"></div>
+
+<!-- ==================== Sidebar ==================== -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h3>目 录</h3>
+    <p>竞赛总纲 · 任务 C</p>
+  </div>
+  <div class="sidebar-nav" id="sidebarNav">
+
+    <div class="nav-section open" data-section="sec1">
+      <a class="nav-section-title active" href="#sec1" onclick="navClick(this, event)">
+        <span class="nav-dot"></span>
+        <span class="nav-num">一</span> 解决什么问题
+      </a>
+      <div class="nav-sub">
+        <a href="#sec1" onclick="navClick(this, event)">场景描述</a>
+        <a href="#sec1-pain" onclick="navClick(this, event)">现状痛点</a>
+        <a href="#sec1-goal" onclick="navClick(this, event)">目标</a>
+      </div>
+    </div>
+
+    <div class="nav-section" data-section="sec2">
+      <a class="nav-section-title" href="#sec2" onclick="navClick(this, event)">
+        <span class="nav-dot"></span>
+        <span class="nav-num">二</span> 通用 AI 做不了
+      </a>
+      <div class="nav-sub">
+        <a href="#sec2" onclick="navClick(this, event)">类比：高材生</a>
+        <a href="#sec2-conflict" onclick="navClick(this, event)">核心矛盾</a>
+      </div>
+    </div>
+
+    <div class="nav-section" data-section="sec3">
+      <a class="nav-section-title" href="#sec3" onclick="navClick(this, event)">
+        <span class="nav-dot"></span>
+        <span class="nav-num">三</span> 微调是什么
+      </a>
+      <div class="nav-sub">
+        <a href="#sec3" onclick="navClick(this, event)">核心概念</a>
+        <a href="#sec3-analogy" onclick="navClick(this, event)">入职培训类比</a>
+        <a href="#sec3-clarify" onclick="navClick(this, event)">关键澄清</a>
+      </div>
+    </div>
+
+    <div class="nav-section" data-section="sec4">
+      <a class="nav-section-title" href="#sec4" onclick="navClick(this, event)">
+        <span class="nav-dot"></span>
+        <span class="nav-num">四</span> 三种主流方向
+      </a>
+      <div class="nav-sub">
+        <a href="#sec4-cpt" onclick="navClick(this, event)">4.1 CPT — 继续预训练</a>
+        <a href="#sec4-sft" onclick="navClick(this, event)">4.2 SFT — 有监督微调</a>
+        <a href="#sec4-dpo" onclick="navClick(this, event)">4.3 DPO — 偏好优化</a>
+        <a href="#sec4-summary" onclick="navClick(this, event)">4.4 小结</a>
+      </div>
+    </div>
+
+    <div class="nav-section" data-section="sec5">
+      <a class="nav-section-title" href="#sec5" onclick="navClick(this, event)">
+        <span class="nav-dot"></span>
+        <span class="nav-num">五</span> 寿险方案结合
+      </a>
+      <div class="nav-sub">
+        <a href="#sec5-base" onclick="navClick(this, event)">5.1 知识底座</a>
+        <a href="#sec5-role" onclick="navClick(this, event)">5.2 微调角色</a>
+        <a href="#sec5-flow" onclick="navClick(this, event)">5.3 工作流程</a>
+      </div>
+    </div>
+
+    <div class="nav-section" data-section="sec6">
+      <a class="nav-section-title" href="#sec6" onclick="navClick(this, event)">
+        <span class="nav-dot"></span>
+        <span class="nav-num">六</span> 具体怎么落地
+      </a>
+      <div class="nav-sub">
+        <a href="#sec6-data" onclick="navClick(this, event)">6.1 训练数据集准备</a>
+        <a href="#sec6-cpt-data" onclick="navClick(this, event)">  CPT 数据集</a>
+        <a href="#sec6-sft-data" onclick="navClick(this, event)">  SFT 数据集</a>
+        <a href="#sec6-dpo-data" onclick="navClick(this, event)">  DPO 数据集</a>
+        <a href="#sec6-data-summary" onclick="navClick(this, event)">  三种对比</a>
+        <a href="#sec6-model" onclick="navClick(this, event)">6.2 小基座模型微调</a>
+        <a href="#sec6-role" onclick="navClick(this, event)">  助手角色</a>
+        <a href="#sec6-workflow" onclick="navClick(this, event)">  协同工作流</a>
+      </div>
+    </div>
+
+    <div class="nav-section" data-section="sec7">
+      <a class="nav-section-title" href="#sec7" onclick="navClick(this, event)">
+        <span class="nav-dot"></span>
+        <span class="nav-num">七</span> 总结
+      </a>
+    </div>
+
+  </div>
+  <div class="sidebar-progress">
+    <span id="progressText">0%</span>
+    <div class="bar"><div class="bar-fill" id="progressBar"></div></div>
+  </div>
+</nav>
+
+<!-- ==================== Main ==================== -->
+<div class="main">
+
+<header class="hero">
+  <div class="badge">竞赛总纲 · 任务 C</div>
+  <h1>模型微调<br>训练保险领域的需求分析模型</h1>
+  <p>用通俗的语言，讲清楚微调是什么、三种主流方向、以及如何结合寿险本体与知识库实现自动化需求分析</p>
+</header>
+
+<div class="container">
+
+<!-- ==================== 一 ==================== -->
+<div class="section" id="sec1">
+  <span class="section-num">第一部分</span>
+  <h2>一、我们要解决什么问题？</h2>
+
+  <h3>场景描述</h3>
+  <p>在日常工作中，我们会收到大量的<strong>寿险需求规格说明书</strong>（简称"需规"）。拿到一份需规之后，业务人员需要做一系列分析工作：</p>
+  <ul>
+    <li>这份需求涉及哪些<strong>保险实体</strong>？（投保人、被保人、受益人、险种、给付责任……）</li>
+    <li>这些实体之间是什么<strong>关系</strong>？（投保人购买了什么险种、险种包含哪些给付责任……）</li>
+    <li>这些内容和我们已有的<strong>知识体系</strong>怎么对得上？</li>
+  </ul>
+  <p>换句话说，就是把一份<strong>"自然语言写的需求文档"</strong>，翻译成一套<strong>"结构化的、标准化的分析结果"</strong>。</p>
+
+  <h3 id="sec1-pain">现状痛点</h3>
+  <table>
+    <thead><tr><th>痛点</th><th>具体表现</th></tr></thead>
+    <tbody>
+      <tr><td><strong>慢</strong></td><td>一份复杂的寿险需规，人工分析可能需要几天</td></tr>
+      <tr><td><strong>容易漏</strong></td><td>人工阅读长文本，难免遗漏某些条款细节</td></tr>
+      <tr><td><strong>标准不统一</strong></td><td>不同人分析同一份需规，输出结果的格式和深度可能完全不一样</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout blue" id="sec1-goal">
+    <strong>我们的目标</strong>
+    让 AI 自动完成这个"翻译"工作——输入一份寿险需规，输出标准化的结构化分析结果。
+  </div>
+</div>
+
+<!-- ==================== 二 ==================== -->
+<div class="section" id="sec2">
+  <span class="section-num">第二部分</span>
+  <h2>二、为什么通用 AI 做不了这件事？</h2>
+
+  <h3>一个类比</h3>
+  <p>假设你招了一个刚毕业的高材生：</p>
+  <ul>
+    <li>他<strong>智商很高</strong>，语言能力一流，什么文章都能读懂</li>
+    <li>但他<strong>从没接触过保险行业</strong>，不知道什么是"现金价值"、"复效期"、"减额交清"</li>
+    <li>他更不知道我们内部有一套叫<strong>"本体"</strong>的知识规范体系</li>
+  </ul>
+  <p>你直接把一份寿险需规丢给他，让他按规范输出分析结果——他只会用大白话跟你聊，甚至会一本正经地胡编乱造。</p>
+
+  <h3>通用 AI 的问题</h3>
+  <table>
+    <thead><tr><th>能力</th><th>通用 AI 的表现</th></tr></thead>
+    <tbody>
+      <tr><td>语言理解</td><td>很强，读得懂中文</td></tr>
+      <tr><td>保险专业知识</td><td>很弱，不懂行业术语和业务逻辑</td></tr>
+      <tr><td>输出格式规范</td><td>不稳定，即使你反复强调"请输出标准格式"，它依然会跑偏</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout red" id="sec2-conflict">
+    <strong>核心矛盾</strong>
+    它有智商，但没有行业手艺。所以我们需要一种方法，教它学会这门手艺。这个方法就是——<strong>微调</strong>。
+  </div>
+</div>
+
+<!-- ==================== 三 ==================== -->
+<div class="section" id="sec3">
+  <span class="section-num">第三部分</span>
+  <h2>三、那怎么教它？——微调是什么？</h2>
+
+  <h3>核心概念</h3>
+  <p><strong>微调（Fine-Tuning）</strong>，简单说就是：在一个已经训练好的通用 AI 模型基础上，用特定的"教材"再训练一遍，让它学会某种特定的行为方式。</p>
+
+  <h3 id="sec3-analogy">一个类比：入职培训</h3>
+  <table>
+    <thead><tr><th>阶段</th><th>做什么</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>大学教育</td><td>预训练</td><td>AI 模型出厂前的"通用教育"，让它学会语言和常识</td></tr>
+      <tr><td><strong>入职培训</strong></td><td><strong>微调</strong></td><td>拿出《优秀员工工作案例集》，手把手教它怎么干活</td></tr>
+    </tbody>
+  </table>
+  <p>通过几千次的规范训练，这个高材生的工作习惯、思维链条、输出格式被扭转成一个符合业务规范的"专才"。</p>
+
+  <div class="callout green" id="sec3-clarify">
+    <strong>关键澄清</strong>
+    微调不是让 AI 去"背诵"保险条款，而是教它<strong>"做事的方法"</strong>。你不需要厨师背下整本菜谱，你只需要教会他"切菜、控火、调味"的手艺，他就能应对各种新菜式。
+  </div>
+
+  <table>
+    <thead><tr><th>错误理解</th><th>正确理解</th></tr></thead>
+    <tbody>
+      <tr><td>把所有寿险条款塞进 AI 脑子里</td><td>教 AI 一套"看到需求→怎么拆解→怎么输出"的思维范式</td></tr>
+      <tr><td>让它记住每一份文档</td><td>让它学会按规范格式处理任何新文档</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ==================== 四 ==================== -->
+<div class="section" id="sec4">
+  <span class="section-num">第四部分</span>
+  <h2>四、微调有哪三种主流方向？</h2>
+  <p>目前业界主流的微调方式有三种，它们各司其职，解决不同层面的问题。</p>
+
+  <h4 id="sec4-cpt">4.1 CPT —— 继续预训练（让它多读专业书）</h4>
+  <div class="callout blue"><strong>类比：让大学生去读保险专业的研究生。</strong></div>
+
+  <table>
+    <thead><tr><th>维度</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><strong>干什么</strong></td><td>让 AI 大量阅读寿险条款、保险法规、精算术语等专业文本</td></tr>
+      <tr><td><strong>数据形式</strong></td><td>纯文本，不需要人工编写问答（直接把文档丢给它读）</td></tr>
+      <tr><td><strong>解决什么问题</strong></td><td>扩充行业常识——让它从"外行"变成"对保险有基本认知"</td></tr>
+      <tr><td><strong>适用场景</strong></td><td>当基座模型对行业术语理解不足时，推荐先用 CPT 补充专业知识</td></tr>
+    </tbody>
+  </table>
+
+  <h3>训练数据集长什么样？</h3>
+  <p>CPT 的数据最简单——就是<strong>纯文本</strong>，不需要任何人标注。直接把专业文档丢给 AI 读就行。</p>
+
+  <table>
+    <thead><tr><th>数据来源</th><th>示例</th></tr></thead>
+    <tbody>
+      <tr><td>FIBO 本体文档</td><td>"Financial Industry Business Ontology (FIBO) defines InsurancePolicy..."</td></tr>
+      <tr><td>寿险条款原文</td><td>"定期寿险的观察期为180天，观察期内因疾病身故仅退还已交保费..."</td></tr>
+      <tr><td>保险法规</td><td>"根据《保险法》第十六条，投保人故意不履行如实告知义务..."</td></tr>
+      <tr><td>公司内部需规</td><td>"需求编号：REQ-LIFE-2024-0032。功能描述：新增保单贷款功能..."</td></tr>
+    </tbody>
+  </table>
+  <div class="callout blue">就像给学生塞了一摞专业课本和公司内部资料，让他自己读，不用出考题。</div>
+
+  <hr class="divider-dash">
+
+  <h4 id="sec4-sft">4.2 SFT —— 有监督微调（手把手教它干活）</h4>
+  <div class="callout green"><strong>类比：带新人做项目，给标准答案照着学。</strong></div>
+
+  <table>
+    <thead><tr><th>维度</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><strong>干什么</strong></td><td>用"问题→标准答案"的问答对，教会 AI 怎么处理需求文档</td></tr>
+      <tr><td><strong>数据形式</strong></td><td>一问一答，需要人工精心编写（比如：输入一段需规，输出标准分析结果）</td></tr>
+      <tr><td><strong>解决什么问题</strong></td><td>学会"听指令、按规矩干活"——从会说大白话变成能输出规范格式</td></tr>
+      <tr><td><strong>适用场景</strong></td><td>业界使用率最高的微调方式，适合需要教会 AI 特定行为模式和输出格式的场景</td></tr>
+    </tbody>
+  </table>
+
+  <h3>训练数据集长什么样？</h3>
+  <p>SFT 的数据是<strong>一问一答</strong>，每一组都包含"输入"和"标准输出"。为了让 AI 学会思考过程，我们还会在中间加上"解题步骤"（这叫思维链，CoT）。</p>
+
+  <p><strong>一组完整的训练数据包含三个部分：</strong></p>
+  <pre>【题目】（Instruction + Input）
+"请分析以下寿险需规文本，提取核心实体，映射到本体类中，以标准 Markdown 格式输出。"
+
+需求文本：定期寿险产品要求投保人在投保时如实告知健康状况，观察期为180天。
+观察期内因疾病身故仅退还已交保费；观察期后身故按基本保额给付身故保险金。
+保单犹豫期为15天，犹豫期内可全额退保。
+
+【解题步骤】（Thought）
+第一步：识别核心实体——"投保人"、"定期寿险"、"观察期"、"身故保险金"、"犹豫期"
+第二步：在本体中找到对应类——投保人→FIBO:InsuredParty
+第三步：梳理关系——投保人 与 定期寿险 之间是 hasPolicy 关系
+第四步：整理属性——观察期=180天，犹豫期=15天
+
+【标准输出】（Response）
+## [[定期寿险]]
+- **本体类**：FIBO:TermLifeInsurance
+- **投保人**：[[投保人]]（FIBO:InsuredParty）
+- **观察期**：180天
+- **犹豫期**：15天
+- **给付责任**：[[身故保险金]]（FIBO:InsuranceBenefit）</pre>
+  <div class="callout green">就像老师批改作业——先看题目，再看解题过程，最后对标准答案。每一步都清清楚楚。</div>
+
+  <hr class="divider-dash">
+
+  <h4 id="sec4-dpo">4.3 DPO —— 偏好优化（纠偏、提升质量）</h4>
+  <div class="callout amber"><strong>类比：绩效考核，告诉它哪些回答好、哪些回答差。</strong></div>
+
+  <table>
+    <thead><tr><th>维度</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><strong>干什么</strong></td><td>给 AI 看"好的回答"和"差的回答"，让它学会区分好坏</td></tr>
+      <tr><td><strong>数据形式</strong></td><td>好回答 vs 坏回答的对照组</td></tr>
+      <tr><td><strong>解决什么问题</strong></td><td>减少胡说八道（幻觉），让输出更靠谱、更符合预期</td></tr>
+      <tr><td><strong>适用场景</strong></td><td>适合对输出质量有极高要求的场景，如降低幻觉、调整语气、确保安全合规</td></tr>
+    </tbody>
+  </table>
+
+  <h3>训练数据集长什么样？</h3>
+  <p>DPO 的数据是<strong>三元组</strong>——同一个问题，给一个好回答和一个坏回答，让 AI 自己对比学习。</p>
+
+  <pre>【好回答】（Positive）
+## [[定期寿险]]
+- **本体类**：FIBO:TermLifeInsurance
+- **观察期**：180天
+- **给付责任**：[[身故保险金]]（FIBO:InsuranceBenefit）
+
+【坏回答】（Negative）
+"定期寿险是一种人寿保险产品，它主要提供身故保障..."
+（问题：大白话聊天，没有按规范格式输出，缺少本体映射）</pre>
+
+  <div class="callout amber">就像经理拿出两份报告做对比——"这份写得好，格式标准；那份写得差，啰嗦没重点。以后照好的来。"</div>
+
+  <table>
+    <thead><tr><th>坏回答的典型问题</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td>用大白话聊天</td><td>没有输出规范的 Markdown 格式</td></tr>
+      <tr><td>本体映射错误</td><td>把"投保人"映射到了错误的类上</td></tr>
+      <tr><td>遗漏实体</td><td>需求里明明有"犹豫期"，输出里却没提</td></tr>
+      <tr><td>一本正经胡说八道</td><td>编造了需求文本里没有的内容（幻觉）</td></tr>
+    </tbody>
+  </table>
+
+  <hr class="divider-dash">
+
+  <h4 id="sec4-summary">4.4 小结：三者的关系</h4>
+
+  <div class="flow">
+    <div class="flow-box">
+      <div style="font-weight:700">CPT</div>
+      <div style="font-size:.82rem;color:var(--text-muted)">读研 · 补充行业常识</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-box highlight">
+      <div style="font-weight:700">SFT</div>
+      <div style="font-size:.82rem;opacity:.8">实习 · 学会做事方法</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-box">
+      <div style="font-weight:700">DPO</div>
+      <div style="font-size:.82rem;color:var(--text-muted)">绩效考核 · 纠偏提升</div>
+    </div>
+  </div>
+
+  <table>
+    <thead><tr><th>范式</th><th>数据准备难度</th><th>典型数据量</th><th>推荐搭配</th></tr></thead>
+    <tbody>
+      <tr><td><strong>CPT</strong></td><td>低（纯文本，无需标注）</td><td>几 GB 专业文档</td><td>适合行业知识补充不足时使用</td></tr>
+      <tr><td><strong>SFT</strong></td><td>中（需编写问答对）</td><td>2000~3000 条</td><td>适合需要教会 AI 特定行为模式时使用</td></tr>
+      <tr><td><strong>DPO</strong></td><td>高（需编写好/坏对照组）</td><td>1000~2000 条</td><td>适合对输出质量有极高要求时使用</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout blue">大多数垂直领域场景下，SFT 是基础标配；对于金融、保险等专业知识密集的领域，CPT+SFT 的组合更为常见。</div>
+</div>
+
+<!-- ==================== 五 ==================== -->
+<div class="section" id="sec5">
+  <span class="section-num">第五部分</span>
+  <h2>五、结合寿险需求分析：我们的方案是什么？</h2>
+
+  <h3 id="sec5-base">5.1 我们的知识底座：本体 + Markdown 知识库</h3>
+
+  <div class="summary-grid">
+    <div class="summary-card">
+      <h5>Protégé 本体（TBox）</h5>
+      <p><strong>类比：法律</strong><br>定义了保险世界的"类"（如投保人、险种、给付责任）和"关系"，是绝对的规范</p>
+    </div>
+    <div class="summary-card">
+      <h5>Markdown 知识库（ABox）</h5>
+      <p><strong>类比：百科全书</strong><br>存放着海量的寿险条款、需求文档实例，用双链连成一张知识网络</p>
+    </div>
+  </div>
+
+  <div class="callout blue">本体是"宪法"，规定了世界怎么分类；知识库是"图书馆"，按宪法的分类存放具体知识。</div>
+
+  <h3 id="sec5-role">5.2 微调在这里扮演什么角色？</h3>
+  <p>有了本体和知识库，还需要微调干什么？答案是：<strong>需要一个"操作员"来连接它们。</strong></p>
+
+  <div class="callout green">你有一本法律大全（本体）和一个巨大的图书馆（知识库），但你需要一个<strong>专业的图书管理员</strong>——他知道怎么根据问题去图书馆里查资料，查完之后怎么按照法律的分类标准整理出来。微调，就是培养这个"图书管理员"。</div>
+
+  <p>具体来说，微调教会 AI 三样本事：</p>
+  <table>
+    <thead><tr><th>本事</th><th>说明</th><th>类比</th></tr></thead>
+    <tbody>
+      <tr><td><strong>本体感知</strong></td><td>读到需求时，本能地找到对应的本体类和属性</td><td>图书管理员看到书名就知道该放到哪个分类架上</td></tr>
+      <tr><td><strong>知识关联</strong></td><td>熟练使用 Markdown 双链语法，把分析结果和已有知识节点关联起来</td><td>知道这本书和那本书之间有引用关系，主动建立索引</td></tr>
+      <tr><td><strong>格式纪律</strong></td><td>输出永远是标准的、可直接被程序解析的 Markdown 格式</td><td>填表永远按模板来，绝不乱写</td></tr>
+    </tbody>
+  </table>
+
+  <h3 id="sec5-flow">5.3 完整工作流程</h3>
+
+  <div class="flow">
+    <div class="flow-box">
+      <div style="font-weight:700">寿险需求规格说明书</div>
+      <div style="font-size:.8rem;color:var(--text-muted)">输入</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-box highlight">
+      <div style="font-weight:700">微调后的 AI 模型</div>
+      <div style="font-size:.8rem;opacity:.8">① 阅读理解 ② 匹配本体 ③ 关联知识库 ④ 输出标准格式</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-box">
+      <div style="font-weight:700">结构化分析结果</div>
+      <div style="font-size:.8rem;color:var(--text-muted)">标准化 Markdown</div>
+    </div>
+  </div>
+
+  <div class="callout blue">就像给工厂装了一条自动化生产线——原料（需求文档）进来，标准产品（结构化分析结果）出去。</div>
+</div>
+
+<!-- ==================== 六 ==================== -->
+<div class="section" id="sec6">
+  <span class="section-num">第六部分</span>
+  <h2>六、具体怎么落地？</h2>
+  <p>围绕竞赛总纲的任务 C，我们分成两步走。</p>
+
+  <h4 id="sec6-data">6.1 任务 C-a：训练数据集准备</h4>
+  <div class="callout blue"><strong>类比：根据不同的"培训方式"，编写不同类型的教材。</strong></div>
+
+  <h4 id="sec6-cpt-data">6.1.1 CPT 数据集——"专业课本"</h4>
+  <div class="callout blue"><strong>类比：给学生准备一摞专业课本和参考资料，让他自己读。</strong></div>
+
+  <table>
+    <thead><tr><th>维度</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><strong>数据格式</strong></td><td>纯文本，无需人工标注</td></tr>
+      <tr><td><strong>数据来源</strong></td><td>FIBO 本体文档、寿险条款原文、保险法规、公司内部需规</td></tr>
+      <tr><td><strong>典型数据量</strong></td><td>几 GB 的专业文本</td></tr>
+      <tr><td><strong>制作难度</strong></td><td>最低——直接收集现有文档即可</td></tr>
+    </tbody>
+  </table>
+
+  <hr class="divider-dash">
+
+  <h4 id="sec6-sft-data">6.1.2 SFT 数据集——"真题及详解"</h4>
+  <div class="callout green"><strong>类比：编写一本《岗位操作手册及真题详解》，每道题都有标准答案和解题步骤。</strong></div>
+
+  <table>
+    <thead><tr><th>维度</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><strong>数据格式</strong></td><td>思维链问答对（题目 → 解题步骤 → 标准答案）</td></tr>
+      <tr><td><strong>数据来源</strong></td><td>专家编写 + AI 扩增 + 自动校验 + 专家精修</td></tr>
+      <tr><td><strong>典型数据量</strong></td><td>2000~3000 条</td></tr>
+      <tr><td><strong>制作难度</strong></td><td>中等——需要精心设计问答对</td></tr>
+    </tbody>
+  </table>
+
+  <p><strong>SFT 数据生产流程：</strong></p>
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <div class="step-title">种子数据</div>
+      <div class="step-desc">专家编写完美范例，约 50 条</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <div class="step-title">AI 扩增</div>
+      <div class="step-desc">学习范例，批量扩增至 2000~3000 条</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <div class="step-title">自动校验</div>
+      <div class="step-desc">检查格式合法性，不合格淘汰</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">4</div>
+      <div class="step-title">专家精修</div>
+      <div class="step-desc">抽样检查，修正业务逻辑错误</div>
+    </div>
+  </div>
+
+  <div class="callout red">关键原则：1000 条高质量数据，远好于 10000 条粗制滥造的数据。质量永远比数量重要。</div>
+
+  <hr class="divider-dash">
+
+  <h4 id="sec6-dpo-data">6.1.3 DPO 数据集——"好报告 vs 坏报告"</h4>
+  <div class="callout amber"><strong>类比：经理拿出两份报告做对比，告诉员工哪份写得好、哪份写得差。</strong></div>
+
+  <table>
+    <thead><tr><th>维度</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><strong>数据格式</strong></td><td>三元组（同一个问题 + 好回答 + 坏回答）</td></tr>
+      <tr><td><strong>数据来源</strong></td><td>好回答来自 SFT 标准答案，坏回答由人工或 AI 刻意构造</td></tr>
+      <tr><td><strong>典型数据量</strong></td><td>1000~2000 条</td></tr>
+      <tr><td><strong>制作难度</strong></td><td>最高——需要同时编写好/坏两组回答</td></tr>
+    </tbody>
+  </table>
+
+  <hr class="divider-dash">
+
+  <h4 id="sec6-data-summary">6.1.4 三种数据集对比总结</h4>
+  <table>
+    <thead><tr><th>维度</th><th>CPT 数据</th><th>SFT 数据</th><th>DPO 数据</th></tr></thead>
+    <tbody>
+      <tr><td><strong>类比</strong></td><td>专业课本</td><td>真题及详解</td><td>好报告 vs 坏报告</td></tr>
+      <tr><td><strong>格式</strong></td><td>纯文本</td><td>思维链问答对</td><td>好/坏回答三元组</td></tr>
+      <tr><td><strong>需要标注</strong></td><td>否</td><td>是</td><td>是</td></tr>
+      <tr><td><strong>制作难度</strong></td><td>低</td><td>中</td><td>高</td></tr>
+      <tr><td><strong>典型数据量</strong></td><td>几 GB</td><td>2000~3000 条</td><td>1000~2000 条</td></tr>
+    </tbody>
+  </table>
+
+  <hr class="divider">
+
+  <h4 id="sec6-model">6.2 任务 C-b：小基座模型微调</h4>
+  <div class="callout blue"><strong>类比：培养一个"打下手的实习生"，帮教授（大模型）准备材料、做预处理。</strong></div>
+
+  <h3>什么是"小基座模型"？</h3>
+  <table>
+    <thead><tr><th>类型</th><th>参数量</th><th>类比</th><th>代表</th></tr></thead>
+    <tbody>
+      <tr><td><strong>大模型</strong></td><td>700亿+</td><td>全能教授，理解力强，但身价高、速度慢</td><td>GPT-4、Claude</td></tr>
+      <tr><td><strong>小基座模型</strong></td><td>70~140亿</td><td>精干的实习生，聪明、便宜、手脚麻利</td><td>Qwen2.5-7B、Llama-3.1-8B</td></tr>
+    </tbody>
+  </table>
+
+  <h3 id="sec6-role">小基座模型在系统中的角色——"助手"而非"主角"</h3>
+  <p>在实际的需求分析流程中，小基座不是最终输出分析结果的那个"专家"，而是<strong>帮大模型打下手的助手</strong>。具体承担三类工作：</p>
+
+  <table>
+    <thead><tr><th>角色</th><th>做什么</th><th>类比</th></tr></thead>
+    <tbody>
+      <tr><td><strong>数据标注助手</strong></td><td>把原始需规文本初步标注成结构化数据，给大模型微调准备教材</td><td>帮老师批改选择题的课代表</td></tr>
+      <tr><td><strong>数据扩增助手</strong></td><td>学习专家写的 50 条种子范例，批量仿写几千条训练数据</td><td>照着样卷誊写练习题的学委</td></tr>
+      <tr><td><strong>预处理工具</strong></td><td>对需求文档做初步的实体识别和文本分类，减轻大模型负担</td><td>公司前台，先初筛访客</td></tr>
+    </tbody>
+  </table>
+
+  <h3 id="sec6-workflow">完整的工作流：小基座 + 大模型协同</h3>
+  <div class="flow" style="flex-direction:column;gap:0">
+    <div class="flow-box" style="width:100%;max-width:260px">
+      <div style="font-weight:700">寿险需求规格说明书</div>
+    </div>
+    <div class="flow-arrow" style="transform:rotate(90deg);padding:6px 0">&darr;</div>
+    <div class="flow-box" style="border-color:var(--accent-border);background:var(--accent-bg);width:100%;max-width:360px">
+      <div style="font-weight:700;color:var(--ink)">小基座模型（助手）</div>
+      <div style="font-size:.8rem;color:var(--text-secondary);margin-top:4px">① 初步实体识别 ② 文本预处理 ③ 标注训练数据</div>
+    </div>
+    <div class="flow-arrow" style="transform:rotate(90deg);padding:6px 0">&darr;</div>
+    <div class="flow-box highlight" style="width:100%;max-width:360px">
+      <div style="font-weight:700">大模型（最终专家）</div>
+      <div style="font-size:.8rem;opacity:.8;margin-top:4px">① 接收预处理结果 ② 结合本体深度映射 ③ 结合知识库推理 ④ 输出最终分析</div>
+    </div>
+  </div>
+
+  <h3>为什么选小模型来做助手？</h3>
+  <table>
+    <thead><tr><th>优势</th><th>说明</th><th>类比</th></tr></thead>
+    <tbody>
+      <tr><td><strong>省钱</strong></td><td>只需要一张普通显卡就能运行</td><td>实习生工资低，养得起</td></tr>
+      <tr><td><strong>安全</strong></td><td>可以完全在内部网络运行，数据不出门</td><td>不用担心商业机密外泄</td></tr>
+      <tr><td><strong>快</strong></td><td>推理速度快，批量处理效率极高</td><td>手脚麻利，干杂活效率高</td></tr>
+      <tr><td><strong>可微调</strong></td><td>体量小，微调成本低，可快速定制能力</td><td>可塑性强，教什么学什么</td></tr>
+    </tbody>
+  </table>
+
+  <h3>微调后的效果</h3>
+  <table>
+    <thead><tr><th>微调前</th><th>微调后</th></tr></thead>
+    <tbody>
+      <tr><td>不认识保险术语和本体类</td><td>能初步识别需求文本中的保险实体</td></tr>
+      <tr><td>输出格式随心所欲</td><td>标注数据时格式标准、规范</td></tr>
+      <tr><td>需要长长提示词才能干活</td><td>简单指令就能高效完成数据预处理</td></tr>
+      <tr><td>批量处理效率低</td><td>快速处理大量需规，为大模型备好"半成品"</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ==================== 七 ==================== -->
+<div class="section" id="sec7">
+  <span class="section-num">总结</span>
+  <h2>七、总结</h2>
+
+  <div class="callout blue" style="font-size:1.1rem;text-align:center;">
+    <strong style="font-size:1.1rem">我们用大模型做最终的需求分析，同时用小基座模型做数据准备和预处理，两者协同工作。</strong>
+  </div>
+
+  <p style="text-align:center;margin:18px 0 6px;font-size:.95rem"><strong>核心逻辑：</strong></p>
+  <div class="flow">
+    <div class="flow-box">
+      <div style="font-weight:700">本体</div>
+      <div style="font-size:.78rem;color:var(--text-muted)">规矩</div>
+    </div>
+    <div class="flow-arrow">+</div>
+    <div class="flow-box">
+      <div style="font-weight:700">知识库</div>
+      <div style="font-size:.78rem;color:var(--text-muted)">资料</div>
+    </div>
+    <div class="flow-arrow">+</div>
+    <div class="flow-box">
+      <div style="font-weight:700">小基座</div>
+      <div style="font-size:.78rem;color:var(--text-muted)">助手预处理</div>
+    </div>
+    <div class="flow-arrow">+</div>
+    <div class="flow-box">
+      <div style="font-weight:700">大模型</div>
+      <div style="font-size:.78rem;color:var(--text-muted)">专家出结果</div>
+    </div>
+  </div>
+
+  <table style="margin-top:20px">
+    <thead><tr><th>组件</th><th>角色</th><th>一句话</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Protégé 本体</strong></td><td>规定规矩</td><td>告诉 AI 保险世界怎么分类、关系怎么定义</td></tr>
+      <tr><td><strong>Markdown 知识库</strong></td><td>提供资料</td><td>存放海量条款和需规，供 AI 随时查阅</td></tr>
+      <tr><td><strong>训练数据集</strong></td><td>培训教材</td><td>教小基座学会数据标注和预处理的手艺</td></tr>
+      <tr><td><strong>小基座模型</strong></td><td>打下手的助手</td><td>负责数据标注、扩增、预处理，帮大模型备好材料</td></tr>
+      <tr><td><strong>大模型</strong></td><td>最终专家</td><td>接收预处理结果，结合本体和知识库，输出最终需求分析</td></tr>
+    </tbody>
+  </table>
+</div>
+
+</div>
+
+<footer class="footer">
+  <p>竞赛总纲 · 任务 C：模型微调——训练保险领域的需求分析模型</p>
+</footer>
+
+</div>
+
+<!-- Back to top -->
+<button class="back-top" id="backTop" onclick="window.scrollTo({top:0})" aria-label="回到顶部">&uarr;</button>
+
+<script>
+// ===== Sidebar toggle (mobile) =====
+const sidebar = document.getElementById('sidebar');
+const menuBtn = document.getElementById('menuBtn');
+const backdrop = document.getElementById('backdrop');
+
+function toggleSidebar() {
+  const open = sidebar.classList.toggle('open');
+  menuBtn.classList.toggle('open', open);
+  if (open) {
+    backdrop.style.display = 'block';
+    requestAnimationFrame(() => backdrop.classList.add('show'));
+    document.body.style.overflow = 'hidden';
+  } else {
+    closeSidebar();
+  }
+}
+function closeSidebar() {
+  sidebar.classList.remove('open');
+  menuBtn.classList.remove('open');
+  backdrop.classList.remove('show');
+  setTimeout(() => { backdrop.style.display = 'none'; }, 250);
+  document.body.style.overflow = '';
+}
+
+// ===== Nav click =====
+function navClick(el, e) {
+  e.preventDefault();
+  const href = el.getAttribute('href');
+  const target = document.querySelector(href);
+  if (target) {
+    const offset = 20;
+    const top = target.getBoundingClientRect().top + window.scrollY - offset;
+    window.scrollTo({ top, behavior: 'smooth' });
+  }
+  // Close sidebar on mobile
+  if (window.innerWidth <= 900) {
+    setTimeout(closeSidebar, 200);
+  }
+}
+
+// ===== Scroll spy + sidebar auto-scroll + progress =====
+const sections = document.querySelectorAll('.section[id], [id]:not(.section)');
+const allAnchors = document.querySelectorAll('[id]');
+const navTitles = document.querySelectorAll('.nav-section-title');
+const navSubs = document.querySelectorAll('.nav-sub a');
+const sidebarNav = document.getElementById('sidebarNav');
+const progressBar = document.getElementById('progressBar');
+const progressText = document.getElementById('progressText');
+const backTop = document.getElementById('backTop');
+
+let ticking = false;
+
+function updateOnScroll() {
+  if (ticking) return;
+  ticking = true;
+  requestAnimationFrame(() => {
+    const scrollY = window.scrollY + 100;
+
+    // Find current section
+    let current = '';
+    document.querySelectorAll('.section[id]').forEach(section => {
+      if (section.offsetTop <= scrollY) current = section.id;
+    });
+
+    // Update nav highlights
+    let activeEl = null;
+    navTitles.forEach(title => {
+      const href = title.getAttribute('href').replace('#','');
+      const isActive = href === current;
+      title.classList.toggle('active', isActive);
+      if (isActive) {
+        title.closest('.nav-section').classList.add('open');
+        activeEl = title;
+      }
+    });
+    navSubs.forEach(sub => {
+      const href = sub.getAttribute('href').replace('#','');
+      const isActive = href === current;
+      sub.classList.toggle('active', isActive);
+      if (isActive) activeEl = sub;
+    });
+
+    // Auto-scroll sidebar to keep active item visible
+    if (activeEl) {
+      const navRect = sidebarNav.getBoundingClientRect();
+      const elRect = activeEl.getBoundingClientRect();
+      const offset = elRect.top - navRect.top - navRect.height / 2 + elRect.height / 2;
+      if (Math.abs(offset) > 40) {
+        sidebarNav.scrollBy({ top: offset, behavior: 'smooth' });
+      }
+    }
+
+    // Progress bar
+    const docH = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = docH > 0 ? Math.min(100, Math.round((window.scrollY / docH) * 100)) : 0;
+    progressBar.style.width = pct + '%';
+    progressText.textContent = pct + '%';
+
+    // Back to top button
+    backTop.classList.toggle('show', window.scrollY > 400);
+
+    ticking = false;
+  });
+}
+
+window.addEventListener('scroll', updateOnScroll, { passive: true });
+updateOnScroll();
+</script>
+
+</body>
+</html>
